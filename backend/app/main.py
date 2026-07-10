@@ -1,5 +1,7 @@
 from fastapi import FastAPI
 from app.api.routes import router
+from app.api.portfolio import router as portfolio_router
+
 from app.core.model_loader import model_loader
 from app.core.logging import setup_logging, get_logger
 
@@ -21,6 +23,7 @@ async def startup():
     logger.info("Models loaded successfully.")
 
 app.include_router(router)
+app.include_router(portfolio_router)
 
 @app.get('/')
 def home():

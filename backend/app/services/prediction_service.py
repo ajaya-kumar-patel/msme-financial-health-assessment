@@ -39,7 +39,7 @@ class PredictionService:
         
         return {
             "raw_pd": round(float(raw_pd), 4),
-            "probability_of_default": round(calibrated_pd * 100, 2),
+            "probability_of_default":  round(float(calibrated_pd), 4),
             "credit_risk_score": health_result["credit_risk"],
             "financial_health_score": health_result["overall"],
             "grade": health_result["grade"],

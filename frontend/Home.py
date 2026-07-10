@@ -1,205 +1,103 @@
-# Collects all MSME input features.
-# Sends them to the FastAPI /predict endpoint.
-# Saves the prediction in st.session_state, allowing the remaining pages (Dashboard.py, Explainability.py, Recommendations.py, etc.) to access the same prediction without calling the API again.
-
 import streamlit as st
-from api_client import predict
 
 st.set_page_config(
     page_title="CredPulse",
-    page_icon="💳",
+    page_icon="🏦",
     layout="wide"
 )
 
-st.title("💳 CredPulse")
-st.subheader("AI-powered MSME Credit Risk Assessment & Financial Health Scoring")
-
+## ======================
+##        Header
+## ======================
+st.title("🏦 CredPulse")
+st.subheader("AI-powered MSME Credit Risk Assessment")
 st.markdown("---")
 
-with st.form("prediction_form"):
 
-    st.header("Business Information")
+left, right = st.columns([2, 1])
+with left:
+    st.markdown(
+        """
+        CredPulse is an AI-powered credit assessment platform designed for banks,
+        NBFCs, and financial institutions to evaluate MSMEs using machine learning
+        and financial health analytics.
 
-    col1, col2 = st.columns(2)
-
-    with col1:
-        business_size = st.selectbox(
-            "Business Size",
-            ["Micro", "Small", "Medium"]
-        )
-
-        business_age = st.number_input(
-            "Business Age (Years)",
-            min_value=0.0,
-            value=5.0
-        )
-
-        industry = st.selectbox(
-            "Industry Type",
-            [
-                "Manufacturing",
-                "Retail",
-                "Services",
-                "Agriculture"
-            ]
-        )
-
-        entity = st.selectbox(
-            "Entity Type",
-            [
-                "Proprietorship",
-                "Partnership",
-                "Private Limited",
-                "LLP"
-            ]
-        )
-
-        monthly_gst_sales = st.number_input(
-            "Monthly GST Sales",
-            min_value=0.0,
-            value=100000.0
-        )
-
-        gst_growth = st.number_input(
-            "GST Growth Rate",
-            value=0.10,
-            format="%.4f"
-        )
-
-        gst_delay = st.number_input(
-            "GST Filing Delay (Days)",
-            min_value=0.0,
-            value=5.0
-        )
-
-        gst_compliance = st.slider(
-            "GST Compliance Rate",
-            0.0,
-            1.0,
-            0.95
-        )
-
-        upi_count = st.number_input(
-            "Monthly UPI Count",
-            min_value=0,
-            value=20
-        )
-
-        upi_value = st.number_input(
-            "Monthly UPI Value",
-            min_value=0.0,
-            value=20000.0
-        )
-
-    with col2:
-
-        digital_ratio = st.slider(
-            "Digital Sales Ratio",
-            0.0,
-            1.0,
-            0.50
-        )
-
-        bank_balance = st.number_input(
-            "Average Bank Balance",
-            min_value=0.0,
-            value=50000.0
-        )
-
-        monthly_credit = st.number_input(
-            "Monthly Credit",
-            min_value=0.0,
-            value=100000.0
-        )
-
-        monthly_debit = st.number_input(
-            "Monthly Debit",
-            min_value=0.0,
-            value=80000.0
-        )
-
-        cashflow_volatility = st.slider(
-            "Cashflow Volatility",
-            0.0,
-            1.0,
-            0.20
-        )
-
-        employee_count = st.number_input(
-            "Employee Count",
-            min_value=0,
-            value=5
-        )
-
-        payroll = st.slider(
-            "Payroll Consistency",
-            0.0,
-            1.0,
-            0.90
-        )
-
-        vendor_delay = st.number_input(
-            "Vendor Payment Delay (Days)",
-            min_value=0.0,
-            value=10.0
-        )
-
-        working_cycle = st.number_input(
-            "Working Capital Cycle (Days)",
-            min_value=0.0,
-            value=60.0
-        )
-
-        emi_bounce = st.number_input(
-            "EMI Bounce Count",
-            min_value=0,
-            value=0
-        )
-
-    submit = st.form_submit_button(
-        "Predict Financial Health",
-        use_container_width=True
+        The platform provides both **single business assessment** and
+        **portfolio-level credit risk analysis**.
+        """
     )
 
+with right:
+    with st.container(border=True):
+        st.markdown("## Quick Overview")
+        items = [
+            "🏦 <b>MSME Credit Assessment</b>",
+            "📊 <b>Portfolio Risk Analytics</b>",
+            "📈 </b>PD & Health Score</b>",
+            "🟢 </b>Loan Readiness Classification</b>",
+            "🔍 <b>Explainable AI</b>",
+            "💡 <b>Smart Recommendations</b>",
+        ]
+        for item in items:
+            st.markdown(
+                f"""
+                <div style="padding:6px 0;">
+                    {item}
+                </div>
+                <hr style="margin:4px 0;">
+                """,
+                unsafe_allow_html=True,
+            )
 
-if submit:
+st.markdown("---")
+## ======================
+##      MAIN MODULES
+## ======================
 
-    customer = {
-        "Business_Size": business_size,
-        "Business_Age": business_age,
-        "Industry_Type": industry,
-        "Entity_Type": entity,
-        "Monthly_GST_Sales": monthly_gst_sales,
-        "GST_Growth_Rate": gst_growth,
-        "GST_Filing_Delay": gst_delay,
-        "GST_Compliance_Rate": gst_compliance,
-        "Monthly_UPI_Count": upi_count,
-        "Monthly_UPI_Value": upi_value,
-        "Digital_Sales_Ratio": digital_ratio,
-        "Average_Bank_Balance": bank_balance,
-        "Monthly_Credit": monthly_credit,
-        "Monthly_Debit": monthly_debit,
-        "Cashflow_Volatility": cashflow_volatility,
-        "Employee_Count": employee_count,
-        "Payroll_Consistency": payroll,
-        "Vendor_Payment_Delay": vendor_delay,
-        "Working_Capital_Cycle": working_cycle,
-        "EMI_Bounce_Count": emi_bounce
-    }
+col1, col2 = st.columns(2)
 
-    with st.spinner("Running AI model..."):
+with col1:
+    with st.container(border=True):
+        st.markdown("## 📋 Business Assessment")
+        st.write("""
+                Assess a single MSME by entering its financial,
+                transactional and operational information.
 
-        result = predict(customer)
+                ### Features
 
-    if result.get("success") is False:
-        st.error(result["message"])
+                - Probability of Default (PD)
+                - Financial Health Score
+                - Credit Risk Score
+                - Business Health Dimensions
+                - Explainability
+                - Smart Recommendations
+                - Download Assessment Report
+                        """
+            )
 
-    else:
-        st.success("Prediction completed successfully.")
+        if st.button("📋 Open Customer Assessment", use_container_width=True):
+            st.switch_page("pages/Customer_Assessment.py")
 
-        st.session_state["customer"] = customer
-        st.session_state["prediction"] = result
+with col2:
+    with st.container(border=True):
+        st.markdown("## 🏢 Portfolio Analytics")
+        st.write("""
+                Upload an MSME portfolio and evaluate the overall
+                credit quality of all businesses.
 
-        st.info(
-            "Go to the Dashboard page from the left sidebar to view the complete analysis."
-        )
+                ### Features
+
+                - Portfolio KPIs
+                - Risk Distribution
+                - Grade Distribution
+                - Loan Readiness Analysis
+                - Industry-wise Insights
+                - High Risk Businesses
+                - Drill-down to Individual Business
+                        """
+            )
+        
+        if st.button("🏢 Open Portfolio Analytics", use_container_width=True):
+            st.switch_page("pages/Portfolio_Analytics.py")
+
+st.markdown("---")

@@ -2,24 +2,24 @@ from pydantic import BaseModel
 from typing import Dict, List
 
 # ======================================
-# Recommendation
+# Dimension Analysis
+# ======================================
+class DimensionAnalysisResponse(BaseModel):
+    score: float
+    status: str
+    message: str
+
+# ======================================
+# Explanation
 # ======================================
 class ExplanationResponse(BaseModel):
-    summary: List[str]
-    business_health_score: float
-    financial_health_score: float
-    grade: str
+    summary: str
+    credit_risk: str
+    strength: str
+    weakness: str
+    dimension_analysis: Dict[str, DimensionAnalysisResponse]
 
 
-# ======================================
-# Recommendation
-# ======================================
-class RecommendationResponse(BaseModel):
-    priority: str
-    category: str
-    issue: str
-    recommendation: str
-    expected_impact: str
 
 # ======================================
 # Prediction Response
@@ -31,7 +31,7 @@ class PredictionResponse(BaseModel):
     financial_health_score: float
     grade: str
     loan_readiness: str
-    dimension_scores: Dict[str,float]
+    dimension_scores: Dict[str, float]
     explanation: ExplanationResponse
-    recommendations: List[RecommendationResponse]
+    recommendations: List[str]
 

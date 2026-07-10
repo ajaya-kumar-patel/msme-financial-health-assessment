@@ -213,9 +213,7 @@ def compute_credit_risk_score(customer_data):
 # ==============================
 # GRADE
 # ==============================
-
 def assign_grade(score):
-
     if score >= 90:
         return "AAA"
     elif score >= 80:
@@ -224,8 +222,12 @@ def assign_grade(score):
         return "A"
     elif score >= 60:
         return "BBB"
+    elif score >= 50:
+        return "BB"
+    elif score >= 40:
+        return "B"
     else:
-        return "High Risk"
+        return "CCC"
 
 # ==============================
 # LOAN READINESS

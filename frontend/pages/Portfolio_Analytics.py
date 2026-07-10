@@ -1,152 +1,196 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import requests
+from io import StringIO
+
+from components.filters import portfolio_filters
+from components.kpi_cards import show_kpis
+from components.charts import (show_score_distribution, show_industry_risk, 
+                               show_dimension_scores, show_risk_matrix)
+from components.tables import show_tables
+from components.portfolio_summary import show_portfolio_summary
+
+from components.high_risk import show_high_risk
+from components.business_details import show_business_details
+from components.portfolio_insights import show_portfolio_insights
+from components.top_businesses import show_top_businesses
+
+
+@st.cache_data
+def analyze_portfolio(file_bytes):
+    input_df = pd.read_csv(StringIO(file_bytes.decode()))
+
+    model_df = input_df.drop(columns=["Business_ID"], errors="ignore")
+
+    csv_buffer = StringIO()
+    model_df.to_csv(csv_buffer, index=False)
+
+    files = {
+        "file": (
+            "portfolio.csv",
+            csv_buffer.getvalue(),
+            "text/csv"
+        )
+    }
+
+    response = requests.post(
+        "http://127.0.0.1:8000/portfolio",
+        files=files,
+        timeout=300
+    )
+
+    response.raise_for_status()
+    
+    data = response.json()
+
+    return input_df, data
+
 
 st.set_page_config(
-    page_title="Portfolio Analytics",
-    page_icon="📈",
+    page_title="Portfolio_Analytics",
+    page_icon="📊",
     layout="wide"
 )
 
-st.title("📈 Portfolio Analytics")
+st.title("📊 Portfolio Analytics")
 
-# -------------------------------------------------------
-# Check Prediction
-# -------------------------------------------------------
+st.write(
+    """ Upload a portfolio CSV containing multiple MSMEs.
+    Each business will be evaluated using the CredPulse model.
+    """)
 
-if "prediction" not in st.session_state:
-    st.warning("Please generate a prediction from the Home page.")
-    st.stop()
-
-result = st.session_state["prediction"]
-
-# -------------------------------------------------------
-# Current Business Summary
-# -------------------------------------------------------
-
-st.header("Current Business")
-
-col1, col2, col3, col4 = st.columns(4)
-
-col1.metric(
-    "Financial Health",
-    f'{result["financial_health_score"]:.2f}'
+upload_file = st.file_uploader(
+    "Upload Portfolio CSV 📤",
+    type = ["csv"]
 )
 
-col2.metric(
-    "Credit Risk Score",
-    f'{result["credit_risk_score"]:.2f}'
-)
+if upload_file is not None:
+    file_bytes = upload_file.getvalue()
+    if ("file_bytes" not in st.session_state or st.session_state.file_bytes != file_bytes):
+        with st.spinner("Analyzing portfolio..."):
+            try:
+                input_df, data = analyze_portfolio(file_bytes)
+                st.toast("✅ Portfolio analyzed successfully!", icon="🎉")
+            except Exception as e:
+                st.error(f"Portfolio analysis failed:\n{e}")
+                st.stop()
 
-col3.metric(
-    "Probability of Default",
-    f'{result["probability_of_default"]:.2f}%'
-)
+            predictions = pd.DataFrame(data["predictions"])
 
-col4.metric(
-    "Grade",
-    result["grade"]
-)
+            dashboard_df = pd.concat(
+                [input_df.reset_index(drop=True),
+                 predictions.reset_index(drop=True)],
+                axis=1
+            )
 
-st.divider()
+            st.session_state.file_bytes = file_bytes
+            st.session_state.dashboard_df = dashboard_df
+            st.session_state.input_df = input_df
+        
+    dashboard_df = st.session_state.dashboard_df
+    input_df = st.session_state.input_df
 
-# -------------------------------------------------------
-# Dimension Scores
-# -------------------------------------------------------
+    with st.expander(
+            "📂 Portfolio Composition (Click to view uploaded portfolio summary)",
+            expanded=False
+            ):
+        with st.container(border=True):
+            show_portfolio_summary(input_df)
+    
+    ## Load Readiness classification
+    with st.expander("📖 Loan Readiness Guide"):
+        st.table({
+            "Health Score": ["90–100", "80–89", "70–79", "<70"],
+            "Decision": [
+                "🟢 Loan Ready",
+                "🟡 Fast Review",
+                "🟠 Review",
+                "🔴 Not Ready"
+            ]
+        })
 
-st.header("Dimension Performance")
+    with st.container(border=True):
+        st.markdown("""
+            <div style="
+            background:#166534;
+            padding:10px 15px;
+            border-radius:8px;
+            color:white;
+            font-size:22px;
+            font-weight:600;
+            margin-top:30px;
+            margin-bottom:15px;
+            ">
+            📈 Risk Analytics
+            </div>
+            """, unsafe_allow_html=True)
+        filtered_df = portfolio_filters(dashboard_df)
 
-scores = result["dimension_scores"]
+        if filtered_df.empty:
+            st.warning(
+                "No businesses match the selected filters. "
+                "Try broadening your filter criteria or reset the filters."
+            )
+            st.stop()
 
-df = pd.DataFrame({
-    "Dimension": [
-        x.replace("_", " ").title()
-        for x in scores.keys()
-    ],
-    "Score": list(scores.values())
-})
+        # KPIs
+        show_kpis(filtered_df)
 
-fig = px.bar(
-    df,
-    x="Dimension",
-    y="Score",
-    text="Score",
-    range_y=[0, 100],
-    title="Business Dimension Scores"
-)
+        # st.divider()
+        st.info(
+            "💡 Want a quick portfolio summary? Expand **'View Portfolio Insights'** below."
+        )
+        with st.expander("🧠 View Portfolio Insights", expanded=False):
+            show_portfolio_insights(filtered_df)
+        st.divider()
 
-fig.update_traces(texttemplate="%{text:.1f}")
+        # Main charts
+        left, right = st.columns(2)
+        with left:
+            show_score_distribution(filtered_df)
+        with right:
+            show_industry_risk(filtered_df)
 
-st.plotly_chart(
-    fig,
-    use_container_width=True
-)
+        st.divider()
 
-st.divider()
+        # Advanced analytics
+        left, right = st.columns(2)
+        with left:
+            show_dimension_scores(filtered_df)
+        with right:
+            show_risk_matrix(filtered_df)
 
-# -------------------------------------------------------
-# Radar Chart
-# -------------------------------------------------------
+        st.divider()
 
-st.header("Financial Health Radar")
+        # Risk matrix
+        left, right = st.columns(2)
+        with left:
+            show_top_businesses(filtered_df)
+        with right:
+            show_high_risk(filtered_df)
 
-radar = px.line_polar(
-    df,
-    r="Score",
-    theta="Dimension",
-    line_close=True,
-)
+        st.divider()
 
-radar.update_traces(fill="toself")
+        # Business drill-down
+        show_business_details(filtered_df)
 
-radar.update_layout(
-    polar=dict(radialaxis=dict(range=[0, 100])),
-    showlegend=False
-)
+        st.divider()
 
-st.plotly_chart(
-    radar,
-    use_container_width=True
-)
+        # Download
+        csv = dashboard_df.to_csv(index=False).encode("utf-8")
 
-st.divider()
+        st.download_button(
+            "⬇ Download Results",
+            csv,
+            "portfolio_predictions.csv",
+            "text/csv"
+        )
 
-# -------------------------------------------------------
-# Score Table
-# -------------------------------------------------------
-
-st.header("Dimension Details")
-
-st.dataframe(
-    df,
-    use_container_width=True,
-    hide_index=True
-)
-
-st.divider()
-
-# -------------------------------------------------------
-# Overall Assessment
-# -------------------------------------------------------
-
-st.header("Portfolio Summary")
-
-if result["financial_health_score"] >= 90:
-    st.success(
-        "Excellent financial profile with very low credit risk."
-    )
-
-elif result["financial_health_score"] >= 80:
-    st.success(
-        "Strong financial profile with low credit risk."
-    )
-
-elif result["financial_health_score"] >= 70:
-    st.warning(
-        "Moderate financial profile. Some improvements are recommended."
-    )
+        # Portfolio table (only once)
+        with st.expander("📋 Portfolio Details", expanded=False):
+            show_tables(filtered_df)
 
 else:
-    st.error(
-        "High credit risk. Business performance should be improved before loan approval."
-    )
+    st.info("📤 Upload a portfolio CSV to begin analysis.")
+    

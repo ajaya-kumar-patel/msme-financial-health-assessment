@@ -199,18 +199,13 @@ def _normalize(customer_data, feature_name):
 # ==============================
 # DIMENSION SCORE
 # ==============================
-
 def _compute_dimension_score(customer_data, weights):
-
     score = 0
-
     for feature, weight in weights.items():
-
         score += weight * _normalize(
             customer_data,
             feature
         )
-
 
     return round(score,2)
 
@@ -219,7 +214,6 @@ def _compute_dimension_score(customer_data, weights):
 # ==============================
 # DIMENSION FUNCTIONS
 # ==============================
-
 def compute_cashflow_score(data):
     return _compute_dimension_score(
         data,
@@ -255,13 +249,11 @@ def compute_stability_score(data):
     )
 
 
-
 # ==============================
 # CREDIT RISK SCORE
 # ==============================
 
 def compute_credit_risk_score(data):
-
     return round(
         (1-data["calibrated_pd"])*100,
         2
@@ -271,24 +263,22 @@ def compute_credit_risk_score(data):
 
 # ==============================
 # GRADE
-# ==============================
-
+# ==============================    
 def assign_grade(score):
-
     if score >= 90:
         return "AAA"
-
     elif score >= 80:
         return "AA"
-
     elif score >= 70:
         return "A"
-
     elif score >= 60:
         return "BBB"
-
+    elif score >= 50:
+        return "BB"
+    elif score >= 40:
+        return "B"
     else:
-        return "High Risk"
+        return "CCC"
 
 
 
@@ -297,16 +287,12 @@ def assign_grade(score):
 # ==============================
 
 def loan_readiness(score):
-
     if score >= 90:
-        return "INSTANT APPROVAL"
-
+        return "LOAN READY"
     elif score >= 80:
         return "FAST REVIEW"
-
     elif score >= 70:
-        return "MANUAL REVIEW"
-
+        return "REVIEW"
     else:
         return "NOT READY"
 
