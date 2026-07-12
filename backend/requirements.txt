@@ -1,0 +1,24 @@
+# Backend
+fastapi==0.139.0
+uvicorn[standard]==0.50.2
+pydantic==2.13.4
+python-multipart==0.0.32
+python-dotenv==1.2.2
+
+
+# Data & ML
+numpy==2.4.6
+pandas==3.0.3
+scipy==1.18.0
+scikit-learn==1.9.0
+xgboost==3.3.0
+shap==0.52.0
+joblib==1.5.3
+cloudpickle==3.1.2
+
+
+# Utilities
+tqdm==4.68.3
+
+
+requests==2.34.2

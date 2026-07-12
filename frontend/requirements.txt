@@ -1,0 +1,11 @@
+# Frontend
+streamlit==1.59.0
+requests==2.34.2
+plotly==6.8.0
+
+# HTTP Client (if backend uses requests)
+requests==2.34.2
+
+# Data & ML
+numpy==2.4.6
+pandas==3.0.3
