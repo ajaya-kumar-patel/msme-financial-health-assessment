@@ -4,8 +4,9 @@
 This project is an end-to-end machine learning platform that predicts the Probability of Default (PD) for Micro, Small, and Medium Enterprises (MSMEs) and converts it into an interpretable Financial Health Score with actionable recommendations.
 
 ## 🚀 Live Demo
-🔗 Dashboard: deployment link will be updated soon.  
-
+- 🌐 **Dashboard:** <https://msme-healthai.streamlit.app/> 
+- ⚙️ **API Base URL::** <https://msme-healthai-api.onrender.com/>
+- 📘 **API Documentation:** <https://msme-healthai-api.onrender.com/docs>
 ---
 
 ## Table of Contents
