@@ -3,6 +3,9 @@
 
 This project is an end-to-end machine learning platform that predicts the Probability of Default (PD) for Micro, Small, and Medium Enterprises (MSMEs) and converts it into an interpretable Financial Health Score with actionable recommendations.
 
+## 🚀 Live Demo
+🔗 Dashboard: deployment link will be updated soon.  
+
 ---
 
 ## Table of Contents
@@ -133,7 +136,7 @@ msme-financial-health-assessment/
 ├── models/           # Trained ML models and artifacts
 ├── notebooks/        # ML experiments and analysis
 ├── src/              # Core ML pipeline code
-├── data/             # Dataset files
+├── data/             # Training, testing and sample portfolio datasets
 ├── data_generation/  # Synthetic MSME data generation
 ├── docs/             # Documentation and data dictionary
 └── README.md
@@ -363,7 +366,11 @@ http://localhost:8501
 ---
 
 ## Usage
-- Run the FastAPI backend.
-- Launch the Streamlit dashboard.
-- Enter MSME details and submit the assessment.
-- Review the generated credit risk, Financial Health Score, explanations, recommendations, and portfolio analytics.
+### Individual MSME Assessment
+- Enter MSME financial and operational details.
+- Generate Probability of Default (PD), Financial Health Score, Credit Grade, explanations and recommendations.
+
+### Portfolio Analytics
+- Upload a CSV containing multiple MSMEs.
+- Use `data/sample_portfolio.csv` for demo analysis.
+- Explore portfolio risk metrics, business insights and high-risk MSME identification.

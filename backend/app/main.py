@@ -9,14 +9,14 @@ setup_logging()
 logger = get_logger(__name__)
 
 app =  FastAPI(
-    title = "CredPulse API",
+    title = "MSME HealthAI API",
     description= "AI-powered MSME Credit Risk Assessment and Financial Health Scoring API",
     version="1.0.0"
 )
     
 @app.on_event("startup")
 async def startup():
-    logger.info("Starting CredPulse API...")
+    logger.info("Starting MSME HealthAI API...")
 
     model_loader.load()
 
@@ -29,7 +29,7 @@ app.include_router(portfolio_router)
 def home():
     logger.info("Home endpoint called")
     return {
-        "message": "Welcome to CredPulse API",
+        "message": "Welcome to MSME HealthAI API",
         "status": "running"
     }
 

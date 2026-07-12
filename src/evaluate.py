@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import (
     accuracy_score, precision_score, recall_score, f1_score,
     roc_auc_score, confusion_matrix, ConfusionMatrixDisplay,
-    classification_report, precision_recall_curve, auc, roc_curve
+    classification_report, precision_recall_curve, auc, roc_curve, brier_score_loss, log_loss
 )
 
 logging.basicConfig(level=logging.INFO,
@@ -30,6 +30,8 @@ def evaluate_model(model, test_df, target="Default"):
         "Recall": recall_score(y_test, y_pred),
         "F1 Score": f1_score(y_test, y_pred),
         "ROC-AUC": roc_auc_score(y_test, y_prob),
+        "brier score": brier_score_loss(y_test, y_prob),
+        "Log Loss": log_loss(y_test, y_prob)
     }
 
     logger.info("Model evaluation completed.")

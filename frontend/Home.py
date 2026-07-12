@@ -1,7 +1,7 @@
 import streamlit as st
 
 st.set_page_config(
-    page_title="CredPulse",
+    page_title="MSME HealthAI",
     page_icon="🏦",
     layout="wide"
 )
@@ -9,7 +9,7 @@ st.set_page_config(
 ## ======================
 ##        Header
 ## ======================
-st.title("🏦 CredPulse")
+st.title("🏦 MSME HealthAI")
 st.subheader("AI-powered MSME Credit Risk Assessment")
 st.markdown("---")
 
@@ -18,7 +18,7 @@ left, right = st.columns([2, 1])
 with left:
     st.markdown(
         """
-        CredPulse is an AI-powered credit assessment platform designed for banks,
+        MSME HealthAI is an AI-powered credit assessment platform designed for banks,
         NBFCs, and financial institutions to evaluate MSMEs using machine learning
         and financial health analytics.
 

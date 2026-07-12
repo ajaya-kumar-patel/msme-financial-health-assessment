@@ -42,7 +42,7 @@ with st.form("prediction_form"):
         with c2:
             industry = st.selectbox(
                 "Industry Type",
-                ["Manufacturing", "Retail", "Services", "Agriculture"],
+                ["Manufacturing", "Retail", "Services", "Agriculture", "Wholesale", "Hospitality"],
                 index = 1
             )
             entity = st.selectbox(

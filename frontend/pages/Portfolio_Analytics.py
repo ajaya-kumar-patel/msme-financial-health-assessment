@@ -1,9 +1,11 @@
+# ==================================================================
 import streamlit as st
 import pandas as pd
 import plotly.express as px
 import requests
 from io import StringIO
-
+import time
+# ===================================================
 from components.filters import portfolio_filters
 from components.kpi_cards import show_kpis
 from components.charts import (show_score_distribution, show_industry_risk, 
@@ -17,10 +19,8 @@ from components.portfolio_insights import show_portfolio_insights
 from components.top_businesses import show_top_businesses
 
 
-@st.cache_data
 def analyze_portfolio(file_bytes):
     input_df = pd.read_csv(StringIO(file_bytes.decode()))
-
     model_df = input_df.drop(columns=["Business_ID"], errors="ignore")
 
     csv_buffer = StringIO()
@@ -36,15 +36,14 @@ def analyze_portfolio(file_bytes):
 
     response = requests.post(
         "http://127.0.0.1:8000/portfolio",
-        files=files,
-        timeout=300
+        files=files
     )
 
     response.raise_for_status()
     
-    data = response.json()
+    job_id = response.json()["job_id"]
 
-    return input_df, data
+    return input_df, job_id
 
 
 st.set_page_config(
@@ -54,10 +53,9 @@ st.set_page_config(
 )
 
 st.title("📊 Portfolio Analytics")
-
 st.write(
     """ Upload a portfolio CSV containing multiple MSMEs.
-    Each business will be evaluated using the CredPulse model.
+    Each business will be evaluated using the MSME HealthAI model.
     """)
 
 upload_file = st.file_uploader(
@@ -65,13 +63,54 @@ upload_file = st.file_uploader(
     type = ["csv"]
 )
 
+if ("current_job" in st.session_state and st.session_state.current_job is not None):
+    if st.button("⛔ Stop Analysis", use_container_width=True):
+        requests.post(
+            f"http://127.0.0.1:8000/portfolio/cancel/{st.session_state.current_job}"
+        )
+
+        st.session_state.current_job = None
+        st.warning("Cancellation requested...")
+        st.stop()
+
+
 if upload_file is not None:
     file_bytes = upload_file.getvalue()
     if ("file_bytes" not in st.session_state or st.session_state.file_bytes != file_bytes):
+        if "current_job" in st.session_state:
+            try:
+                requests.post(
+                    f"http://127.0.0.1:8000/portfolio/cancel/{st.session_state.current_job}"
+                )
+            except Exception:
+                pass
+
         with st.spinner("Analyzing portfolio..."):
             try:
-                input_df, data = analyze_portfolio(file_bytes)
-                st.toast("✅ Portfolio analyzed successfully!", icon="🎉")
+                input_df, job_id = analyze_portfolio(file_bytes)
+                st.session_state.current_job = job_id
+                
+                progress = st.progress(0)
+                
+                while True:
+                    status = requests.get(
+                        f"http://127.0.0.1:8000/portfolio/status/{job_id}"
+                    ).json()
+
+                    progress.progress(status["progress"])
+
+                    if status["status"] == "completed":
+                        data = status["result"]
+                        st.session_state.current_job = None
+                        st.toast("✅ Portfolio analyzed successfully!", icon="🎉")
+                        break
+
+                    elif status["status"] == "cancelled":
+                        st.session_state.current_job = None
+                        st.warning("Portfolio analysis cancelled.")
+                        st.stop()
+                    time.sleep(1)
+                    
             except Exception as e:
                 st.error(f"Portfolio analysis failed:\n{e}")
                 st.stop()
@@ -87,6 +126,8 @@ if upload_file is not None:
             st.session_state.file_bytes = file_bytes
             st.session_state.dashboard_df = dashboard_df
             st.session_state.input_df = input_df
+            st.session_state.current_job = None
+            
         
     dashboard_df = st.session_state.dashboard_df
     input_df = st.session_state.input_df
@@ -154,7 +195,6 @@ if upload_file is not None:
 
         st.divider()
 
-        # Advanced analytics
         left, right = st.columns(2)
         with left:
             show_dimension_scores(filtered_df)
@@ -162,8 +202,7 @@ if upload_file is not None:
             show_risk_matrix(filtered_df)
 
         st.divider()
-
-        # Risk matrix
+        
         left, right = st.columns(2)
         with left:
             show_top_businesses(filtered_df)
@@ -187,10 +226,8 @@ if upload_file is not None:
             "text/csv"
         )
 
-        # Portfolio table (only once)
         with st.expander("📋 Portfolio Details", expanded=False):
             show_tables(filtered_df)
 
 else:
     st.info("📤 Upload a portfolio CSV to begin analysis.")
-    
