@@ -18,6 +18,11 @@ from components.business_details import show_business_details
 from components.portfolio_insights import show_portfolio_insights
 from components.top_businesses import show_top_businesses
 
+# FastAPI Backend URL
+BASE_URL = "https://msme-healthai-api.onrender.com"
+
+# Prediction Endpoint
+PORTFOLIO_URL = f"{BASE_URL}/portfolio"
 
 def analyze_portfolio(file_bytes):
     input_df = pd.read_csv(StringIO(file_bytes.decode()))
@@ -35,7 +40,7 @@ def analyze_portfolio(file_bytes):
     }
 
     response = requests.post(
-        "http://127.0.0.1:8000/portfolio",
+        PORTFOLIO_URL,
         files=files
     )
 
@@ -44,7 +49,6 @@ def analyze_portfolio(file_bytes):
     job_id = response.json()["job_id"]
 
     return input_df, job_id
-
 
 st.set_page_config(
     page_title="Portfolio_Analytics",
@@ -66,7 +70,7 @@ upload_file = st.file_uploader(
 if ("current_job" in st.session_state and st.session_state.current_job is not None):
     if st.button("⛔ Stop Analysis", use_container_width=True):
         requests.post(
-            f"http://127.0.0.1:8000/portfolio/cancel/{st.session_state.current_job}"
+            f"{BASE_URL}/portfolio/cancel/{st.session_state.current_job}"
         )
 
         st.session_state.current_job = None
@@ -80,7 +84,7 @@ if upload_file is not None:
         if "current_job" in st.session_state:
             try:
                 requests.post(
-                    f"http://127.0.0.1:8000/portfolio/cancel/{st.session_state.current_job}"
+                    f"{BASE_URL}/portfolio/cancel/{st.session_state.current_job}"
                 )
             except Exception:
                 pass
@@ -94,7 +98,7 @@ if upload_file is not None:
                 
                 while True:
                     status = requests.get(
-                        f"http://127.0.0.1:8000/portfolio/status/{job_id}"
+                        f"{BASE_URL}/portfolio/status/{job_id}"
                     ).json()
 
                     progress.progress(status["progress"])
