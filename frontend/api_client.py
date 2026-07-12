@@ -1,7 +1,7 @@
 import requests
 
 # FastAPI Backend URL
-BASE_URL = "http://127.0.0.1:8000"
+BASE_URL = "https://msme-healthai-api.onrender.com"
 
 # Prediction Endpoint
 PREDICT_URL = f"{BASE_URL}/predict"
